@@ -23,14 +23,11 @@ import com.google.firebase.ml.vision.common.FirebaseVisionImageMetadata;
 import com.google.firebase.ml.vision.face.FirebaseVisionFace;
 import com.google.firebase.ml.vision.face.FirebaseVisionFaceDetector;
 import com.google.firebase.ml.vision.face.FirebaseVisionFaceDetectorOptions;
-import com.google.firebase.storage.FirebaseStorage;
-import com.google.firebase.storage.StorageReference;
-import com.google.firebase.storage.UploadTask;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.util.List;
-import java.util.UUID;
+
+import bread.and.butter.com.pantilthat.PimoroniPanTiltHatDriver;
 
 public class HomeActivity extends Activity {
   private static final String TAG = "HomeActivity";
@@ -39,7 +36,7 @@ public class HomeActivity extends Activity {
 
   private RPICamera camera;
   private HandlerThread cameraThread;
-  private FirebaseStorage storage;
+  private PimoroniPanTiltHatDriver panTiltHatDriver;
 
   private final FirebaseVisionFaceDetectorOptions options =
       new FirebaseVisionFaceDetectorOptions.Builder()
@@ -51,9 +48,19 @@ public class HomeActivity extends Activity {
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
-    storage = FirebaseStorage.getInstance();
     initCamera();
     initPIO();
+    initPanTilt();
+  }
+
+  private void initPanTilt() {
+    try {
+      panTiltHatDriver = PimoroniPanTiltHatDriver.create();
+    } catch (IOException e) {
+      Log.w(TAG, "Failed to initialize pan tilt driver.");
+    }
+    panTiltHatDriver.pan(90);
+    panTiltHatDriver.tilt(90);
   }
 
   private void initCamera() {
@@ -107,38 +114,9 @@ public class HomeActivity extends Activity {
                           Log.w(TAG,"Failed to analyze image", e);
                         }
                       });
-
-
-          // get image bytes
-//          ByteBuffer imageBuf = image.getPlanes()[0].getBuffer();
-//          final byte[] imageBytes = new byte[imageBuf.remaining()];
-//          imageBuf.get(imageBytes);
           image.close();
-
-//          postprocess(imageBytes);
         }
       };
-
-  private void postprocess(final byte[] imageBytes) {
-    if (imageBytes != null) {
-      Log.i(TAG,"Got a picture with " + imageBytes.length + " bytes!!!");
-      final StorageReference imageRef = storage.getReference().child(UUID.randomUUID().toString());
-      UploadTask task = imageRef.putBytes(imageBytes);
-      task.addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
-        @Override
-        public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-          // mark image in the database
-          Log.i(TAG, "Image upload successful");
-        }
-      }).addOnFailureListener(new OnFailureListener() {
-        @Override
-        public void onFailure(@NonNull Exception e) {
-          // clean up this entry
-          Log.w(TAG, "Unable to upload image to Firebase");
-        }
-      });
-    }
-  }
 
   private void initPIO() {
     PeripheralManager manager = PeripheralManager.getInstance();

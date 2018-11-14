@@ -1,5 +1,4 @@
 package bread.and.butter.com.pantilthat;
-
 import android.support.annotation.Nullable;
 import android.util.Log;
 
@@ -54,14 +53,25 @@ public class PimoroniPanTiltHatDriver implements AutoCloseable {
   private boolean servo2Enabled;
   private boolean lightOn;
 
-  @Nullable private final LightConfig lightConfig;
+  @Nullable
+  private final LightConfig lightConfig;
 
   private I2cDevice device;
 
+  public static PimoroniPanTiltHatDriver create(LightConfig lightConfig) throws IOException {
+    return PimoroniPanTiltHatDriver.create(
+            0x15, new ServoConfig(), new ServoConfig(), lightConfig);
+  }
+
+  public static PimoroniPanTiltHatDriver create() throws IOException {
+     return PimoroniPanTiltHatDriver.create(
+             0x15, new ServoConfig(), new ServoConfig(), null);
+  }
+
   public static PimoroniPanTiltHatDriver create(
       int ic2Address,
-      @Nullable ServoConfig servo1,
-      @Nullable ServoConfig servo2,
+      ServoConfig servo1,
+      ServoConfig servo2,
       @Nullable LightConfig lightConfig) throws IOException {
     return new PimoroniPanTiltHatDriver(
         PeripheralManager.getInstance().openI2cDevice(I2C_DEVICE_NAME, ic2Address),
