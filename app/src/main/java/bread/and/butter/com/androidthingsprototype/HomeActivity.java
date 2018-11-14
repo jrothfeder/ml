@@ -13,7 +13,6 @@ import android.util.Log;
 
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.android.gms.tasks.Task;
 import com.google.android.things.pio.Gpio;
 import com.google.android.things.pio.GpioCallback;
 import com.google.android.things.pio.PeripheralManager;
@@ -89,10 +88,9 @@ public class HomeActivity extends Activity {
           FirebaseVisionImage firebaseVisionImage = FirebaseVisionImage.fromMediaImage(image, FirebaseVisionImageMetadata.ROTATION_0);
           FirebaseVisionFaceDetector detector = FirebaseVision.getInstance()
               .getVisionFaceDetector(options);
-          Task<List<FirebaseVisionFace>> result =
-              detector.detectInImage(firebaseVisionImage)
+          detector.detectInImage(firebaseVisionImage)
                   .addOnSuccessListener(
-                      new OnSuccessListener<List<FirebaseVisionFace>>() {
+                    new OnSuccessListener<List<FirebaseVisionFace>>() {
                         @Override
                         public void onSuccess(List<FirebaseVisionFace> faces) {
                           for(FirebaseVisionFace face : faces) {
@@ -137,6 +135,11 @@ public class HomeActivity extends Activity {
     cameraThread.quitSafely();
     if (buttonGpio != null) {
       buttonGpio.unregisterGpioCallback(buttonCallback);
+    }
+    try {
+      panTiltHatDriver.close();
+    } catch (Exception e) {
+      Log.w(TAG, "Failed to close pan tilt driver", e);
     }
   }
 

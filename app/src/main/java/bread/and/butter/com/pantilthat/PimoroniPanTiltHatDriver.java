@@ -1,5 +1,4 @@
 package bread.and.butter.com.pantilthat;
-import android.support.annotation.Nullable;
 import android.util.Log;
 
 import com.google.android.things.pio.I2cDevice;
@@ -44,111 +43,38 @@ public class PimoroniPanTiltHatDriver implements AutoCloseable {
     Register(int v) {
       this.v = v;
     }
-
   }
-  private final ServoConfig servo1Conf;
-  private final ServoConfig servo2Conf;
-
-  private boolean servo1Enabled;
-  private boolean servo2Enabled;
-  private boolean lightOn;
-
-  @Nullable
-  private final LightConfig lightConfig;
 
   private I2cDevice device;
-
-  public static PimoroniPanTiltHatDriver create(LightConfig lightConfig) throws IOException {
-    return PimoroniPanTiltHatDriver.create(
-            0x15, new ServoConfig(), new ServoConfig(), lightConfig);
-  }
+  private final ServoConfig servoConfig = new ServoConfig();
 
   public static PimoroniPanTiltHatDriver create() throws IOException {
-     return PimoroniPanTiltHatDriver.create(
-             0x15, new ServoConfig(), new ServoConfig(), null);
+     return PimoroniPanTiltHatDriver.create(0x15);
   }
 
-  public static PimoroniPanTiltHatDriver create(
-      int ic2Address,
-      ServoConfig servo1,
-      ServoConfig servo2,
-      @Nullable LightConfig lightConfig) throws IOException {
+  public static PimoroniPanTiltHatDriver create(int ic2Address) throws IOException {
     return new PimoroniPanTiltHatDriver(
-        PeripheralManager.getInstance().openI2cDevice(I2C_DEVICE_NAME, ic2Address),
-        servo1,
-        servo2,
-        lightConfig);
+        PeripheralManager.getInstance().openI2cDevice(I2C_DEVICE_NAME, ic2Address));
   }
 
-  PimoroniPanTiltHatDriver(
-      I2cDevice device,
-      ServoConfig servo1Conf,
-      ServoConfig servo2Conf,
-      LightConfig lightConfig) {
+  PimoroniPanTiltHatDriver(I2cDevice device) {
     this.device = device;
-    this.servo1Conf = servo1Conf;
-    this.servo2Conf = servo2Conf;
-    this.lightConfig = lightConfig;
-
-    servo1Enabled = false;
-    servo2Enabled = false;
-    lightOn = false;
-
     setConfig();
   }
 
   private void setConfig() {
     byte config = 0;
-    config |= (isServo1Enabled() ? 1 : 0);
-    config |= (isServo2Enabled() ? 1 : 0)  << 1;
-    config |= (areLightsEnabled() ? 1 : 0) << 2;
-    config |= (areLightsEnabled() ? lightConfig.lightMode.v : LightMode.WS2812.v) << 3;
-    config |= (areLightsEnabled() ? (lightOn ? 1 : 0) : 0) << 4;
+    config |= 1;                        // servo 1 enabled
+    config |= 1  << 1;                  // servo 2 enabled
+    config |= 0 << 2;                   // lights enabled
+    config |= LightMode.WS2812.v << 3;  // light mode
+    config |= 0 << 4;                   // lights on
 
     try {
       device.writeRegByte(Register.CONFIG.v, config);
     } catch (IOException e) {
-      Log.w(TAG, "Failed to write config " + config + " to register " + Register.CONFIG.v);
+      Log.w(TAG, "Failed to write config " + config + " to register " + Register.CONFIG.v, e);
     }
-  }
-
-  private boolean isServo1Enabled() {
-    return servo1Enabled;
-  }
-
-  private boolean isServo2Enabled() {
-    return servo2Enabled;
-  }
-
-  private boolean areLightsEnabled() {
-    return lightConfig != null;
-  }
-
-  @Override
-  public void close() throws Exception {
-    device.close();
-  }
-
-  /**
-   * Get position of servo one in degrees
-   */
-  private int getServoOnePos() {
-    return -1;
-  }
-
-  /**
-   * Get position of servo one in degrees
-   */
-  private int getServoTwoPos() {
-    return -1;
-  }
-
-  private void setServoOnePos(int degrees) {
-
-  }
-
-  private void setServoTwoPos(int degrees) {
-
   }
 
   /**
@@ -177,5 +103,47 @@ public class PimoroniPanTiltHatDriver implements AutoCloseable {
    */
   public int getTilt() {
     return getServoTwoPos();
+  }
+
+  @Override
+  public void close() throws Exception {
+    device.close();
+  }
+
+  /**
+   * Get position of servo one in degrees
+   */
+  private int getServoOnePos() {
+    return -1;
+  }
+
+  /**
+   * Get position of servo one in degrees
+   */
+  private int getServoTwoPos() {
+    return -1;
+  }
+
+  /**
+   * Angle in degrees from -90 to 90
+   */
+  private void setServoOnePos(int angle) {
+    setServoPos(angle, Register.SERVO1.v);
+  }
+
+  /**
+   * Angle in degrees from -90 to 90
+   */
+  private void setServoTwoPos(int angle) {
+    setServoPos(angle, Register.SERVO2.v);
+  }
+
+  private void setServoPos(int angle, int addr) {
+    int us = servoConfig.degrees2Us(angle);
+    try {
+      device.writeRegWord(addr, (short)us);
+    } catch (IOException e) {
+      Log.w(TAG, "Error writing angle to servo", e);
+    }
   }
 }
