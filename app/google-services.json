@@ -1,0 +1,42 @@
+{
+  "project_info": {
+    "project_number": "1025737039021",
+    "firebase_url": "https://ml-kit-prototype.firebaseio.com",
+    "project_id": "ml-kit-prototype",
+    "storage_bucket": "ml-kit-prototype.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1025737039021:android:87206f43e280100c",
+        "android_client_info": {
+          "package_name": "bread.and.butter.com.androidthingsprototype"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1025737039021-mvrqkkpoevshle346tmfe3pqcne9hics.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA4g7RP64b_KyMKwNvBKEfjf2iapLF7JXQ"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
